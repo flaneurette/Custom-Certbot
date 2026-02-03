@@ -24,16 +24,19 @@ Paste:
 
 ```
 #!/bin/bash
+# Ensure services are restored on exit or error
+cleanup() {
+    systemctl start apache2
+    systemctl start postfix
+    systemctl start dovecot
+}
+trap cleanup EXIT
+
 for cert in $(certbot certificates | grep "Certificate Name:" | awk '{print $3}'); do
     if [ "$cert" != "mail.example.com" ]; then
         certbot renew --cert-name "$cert"
     fi
 done
-
-sudo systemctl stop apache2
-sudo certbot certonly --standalone -d mail.example1.com -d mail.example2.com -d mail.example3.com
-sudo systemctl start apache2
-
 ```
 
 Modify:

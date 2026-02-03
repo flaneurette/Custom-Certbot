@@ -64,14 +64,31 @@ nano /usr/local/bin/mail-certs.sh
 
 Paste:
 
-> NOTE: Don't forget to add your domains here! example1, example2 etc.
+> NOTE: Don't forget to add your domains here! example1, example2  and your email etc.
 
 ```
 #!/bin/bash
-sudo systemctl stop apache2
-sudo certbot certonly --standalone -d mail.example1.com -d mail.example2.com -d mail.example3.com
-sudo systemctl start apache2
+
+# Ensure services are restored on exit or error
+cleanup() {
+    systemctl start apache2
+    systemctl start postfix
+    systemctl start dovecot
+}
+trap cleanup EXIT
+
+# Stop services temporarily
+systemctl stop postfix
+systemctl stop dovecot
+systemctl stop apache2
+
+sudo certbot certonly --standalone \
+-d mail.example1.com -d mail.example2.com -d mail.example3.com \
+--non-interactive --agree-tos --email you@example.com \
+--preferred-challenges http-01 --force-renewal
 ```
+
+SAN cert: covers all three domains in one certificate.
 
 Modify:
 
